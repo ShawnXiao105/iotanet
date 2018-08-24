@@ -28,3 +28,8 @@ https://thetangle.org/live
 ## Iota Nodes:
 https://iotanodes.org/
 
+## Iota Transaction/Bundle基本概念
+
+
+## Iota testnet Faucet
+https://faucet.testnet.iota.org/
