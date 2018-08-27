@@ -5,7 +5,7 @@ import time
 import datetime
 import re
 import os
-import RPi.GPIO as GPIO
+#import RPi.GPIO as GPIO
 from operator import itemgetter
 
 from iota import Iota, ProposedTransaction, Address, TryteString, Tag, Transaction
@@ -26,16 +26,6 @@ def get_checksum(address):
     s = hashlib.sha256(data)
     return s.hexdigest()
 
-
-# Verifies the integrety of a address and returns True or False
-def verify_checksum(checksum, address):
-    actual_checksum = get_checksum(address)
-    if actual_checksum == checksum:
-        return True
-    else:
-        return False
-
-
 # Will ask the user for a yes or no and returns True or False accordingly
 def yes_no_user_input():
     while True:
@@ -48,6 +38,14 @@ def yes_no_user_input():
         else:
             print("""Ups seems like you entered something different then "Y" or "N" """)
 
+# Verifies the integrety of a address and returns True or False
+def verify_checksum(checksum, address):
+    actual_checksum = get_checksum(address)
+    if actual_checksum == checksum:
+        return True
+    else:
+        return False
+
 # Creates a unique file name by taking the first 12 characters of the sha256 hash from a seed
 def create_file_name():
     seed_hash = create_seed_hash(seed)
@@ -58,7 +56,7 @@ def create_file_name():
 
 # The login screen; Will make sure that only a valid seed is enterd
 def log_in():
-    raw_seed = "123412341234123412341243" #insert your seed here
+    raw_seed = "BE9NICE9TO9OTHERS9AND9DO9NOT9TAKE9MORE9THAN9TEN9PERCENT9OF9THE9REMAINING9BALANCE9" #insert your seed here
     raw_seed = raw_seed.upper()
     raw_seed = list(raw_seed)
     allowed = list("ABCDEFGHIJKLMNOPQRSTUVWXYZ9")
@@ -80,7 +78,6 @@ def log_in():
 # Will try to open the account file. In case the file doesn't exist it will create a new account file.
 def read_account_data():
     try:
-
         with open(file_name, 'r') as account_data:
             data = json.load(account_data)
             return data
@@ -89,7 +86,7 @@ def read_account_data():
             data = {}
             data['account_data'] = []
             data['account_data'].append({        
-                'settings': [{'host': "Enter iota node uri with port", 'min_weight_magnitude': 15, 'units': "i"}],
+                'settings': [{'host': "https://nodes.testnet.iota.org:443", 'min_weight_magnitude': 14, 'units': "i"}],
                 'address_data': [],
                 'fal_balance': [{'f_index': 0, 'l_index': 0}],
                 'transfers_data': []
@@ -128,7 +125,6 @@ def convert_units(value):
         value = str(value + "Ti")
         return value
 
-
 # Takes a address (81 Characters) and converts it to an address with checksum (90 Characters)
 def address_checksum(address):
     bytes_address = bytes(address)
@@ -166,9 +162,63 @@ def write_address_data(index, address, balance):
     with open(file_name, 'w') as account_data:
         json.dump(raw_account_data, account_data)
 
+# Takes the f_index and/or the l_index and saves them in the account file
+# "f_index" is the index of the first address with balance and "l_index" is the index of the last address with balance
+def write_fal_balance(f_index=0, l_index=0):
+    if f_index > 0 and l_index > 0:
+        fal_balance[0]["f_index"] = f_index
+        fal_balance[0]["l_index"] = l_index
+
+    elif f_index > 0:
+        fal_balance[0]["f_index"] = f_index
+    elif l_index > 0:
+        fal_balance[0]["l_index"] = l_index
+    else:
+        return
+
+    with open(file_name, 'w') as account_data:
+        json.dump(raw_account_data, account_data)
+        
+        
+        
+# Writes data of an transaction to the account file
+def write_transfers_data(
+        transaction_hash,
+        is_confirmed,
+        timestamp,
+        tag,
+        address,
+        message,
+        value,
+        bundle
+):
+    for p in transfers_data:
+        if p["transaction_hash"] == transaction_hash:
+            if is_confirmed == p["is_confirmed"]:
+                return
+            else:
+                p['is_confirmed'] = is_confirmed
+                with open(file_name, 'w') as account_data:
+                    json.dump(raw_account_data, account_data)
+                return
+
+    raw_account_data["account_data"][0]["transfers_data"].append({
+        'transaction_hash': transaction_hash,
+        'is_confirmed': is_confirmed,
+        'timestamp': timestamp,
+        'tag': tag,
+        'address': address,
+        'message': message,
+        'value': value,
+        'bundle': bundle
+
+    })
+
+    with open(file_name, 'w') as account_data:
+        json.dump(raw_account_data, account_data)
+
 # Updates the f_index and l_index
 def update_fal_balance():
-
     index_with_value = []
     for data in address_data:
         if data["balance"] > 0:
@@ -179,7 +229,6 @@ def update_fal_balance():
         f_index = min(index_with_value)
         l_index = max(index_with_value)
         write_fal_balance(f_index, l_index)
-
     return
 
 # Sends a request to the IOTA node and gets the current confirmed balance
@@ -188,7 +237,6 @@ def address_balance(address):
     gna_result = api.get_balances([address])
     balance = gna_result['balances']
     return balance[0]
-
 
 # Checks all addresses that are saved in the account file and updates there balance
 # start_index can be set in order to ignore all addresses befor the start index
@@ -210,103 +258,37 @@ def update_addresses_balance(start_index=0):
 
 # Generates one or more addresses and saves them in the account file
 def generate_addresses(count):
-        index_list = [-1]
-        for data in address_data:
-            index = data["index"]
-            index_list.append(index)
+    index_list = [-1]
+    for data in address_data:
+        index = data["index"]
+        index_list.append(index)
 
-        if max(index_list) == -1:
-            start_index = 0
-        else:
-            start_index = max(index_list) + 1
-        generator = AddressGenerator(seed)
-        addresses = generator.get_addresses(start_index, count)  # This is the actual function to generate the address.
-        i = 0
-
-        while i < count:
-            index = start_index + i
-            address = addresses[i]
-            balance = address_balance(address)
-            write_address_data(index, str(address), balance)
-            i += 1
-
-        update_fal_balance()
-        
-        
-        
-# Will generate and scan X addresses of an seed for balance. If there are already saved addresses in the ac-
-# count data, it will start with the next higher address index
-def find_balance(count):
-    max_gap = 3
-    margin = 4
+    if max(index_list) == -1:
+        start_index = 0
+    else:
+        start_index = max(index_list) + 1
+    generator = AddressGenerator(seed)
+    addresses = generator.get_addresses(start_index, count)  # This is the actual function to generate the address.
     i = 0
-    balance_found = False
-    print("Generating addresses and checking for balance, please wait...\n")
-    while i < count and margin > 0:
-        print("Checking address " + str(i+1) + " in range of " + str(count))
-        generate_addresses(1)
-        index_list = []
-        for data in address_data:
-            index = data['index']
-            index_list.append(index)
-        max_index = max(index_list)
-        for data in address_data:
-            index = data['index']
-            balance = data['balance']
-            if index == max_index and balance > 0:
-                balance_found = True
-                address = data['address']
-                print("Balance found! \n" +
-                      "   Index: " + str(index) + "\n" +
-                      "   Address: " + str(address) + "\n" +
-                      "   Balanc: " + convert_units(balance) + "\n")
-                margin = max_gap
-                if count - i <= max_gap:
-                    count += max_gap
 
-            elif index == max_index and margin <= max_gap:
-                margin -= 1
-
+    while i < count:
+        index = start_index + i
+        address = addresses[i]
+        balance = address_balance(address)
+        write_address_data(index, str(address), balance)
         i += 1
-    if not balance_found:
-        print("No address with balance found!")
 
+    update_fal_balance()
 
-# Gets the first address after the last address with balance. If there is no saved address it will generate a new one
-def get_deposit_address():
-    try:
-        l_index = fal_balance[0]["l_index"]
-        if l_index == 0:
-            deposit_address = address_data[0]["address"]
-            return deposit_address
-
-        for p in address_data:
-            address = p["address"]
-            checksum = p["checksum"]
-            integrity = verify_checksum(checksum, address)
-            if p["index"] > l_index and integrity:
-                deposit_address = p["address"]
-                return deposit_address
-            elif not integrity:
-                return "Invalid checksum!!!"
-        print("Generating address...")
-        generate_addresses(1)
-        for p in address_data:
-            address = p["address"]
-            checksum = p["checksum"]
-            integrity = verify_checksum(checksum, address)
-            if p["index"] > l_index and integrity:
-                deposit_address = p["address"]
-                return deposit_address
-    except:
-        "An error acoured while trying to get the deposit address"
 
 
 
 # Gets the first address after the last address with balance. If there is no saved address it will generate a new one
 def get_deposit_address():
     try:
+        print(fal_balance)
         l_index = fal_balance[0]["l_index"]
+        print("l_index: "+ str(l_index))
         if l_index == 0:
             deposit_address = address_data[0]["address"]
             return deposit_address
@@ -359,6 +341,7 @@ def full_account_info():
         print(fal_data)
     else:
         print("No Data to display!")
+
 
 # Will ask the user to enter the amount and Units (Iota, MegaIota, GigaIota,etc.)
 def transfer_value_user_input():
@@ -533,6 +516,7 @@ def review_transfers(prepared_transferes):
 def send_transfer(prepared_transferes):
     print("Sending transfer, this can take a while...")
     change_addy = bytes(get_deposit_address())
+    print("change_addy: " + str(change_addy))
     api = Iota(iota_node, seed)
     api.send_transfer(
         depth=7,
@@ -619,54 +603,64 @@ def get_transfers(full_history, print_history=True):
         
 def call_history():
     if not account_history_executing:
-    print("loop called for account history")
-    get_transfers(full_history=False, print_history=False)
+        print("loop called for account history")
+        get_transfers(full_history=False, print_history=False)
 
-# The function that rules them all!
-# This function will be called when the script is executed and will ask the user for the seed and then listens to
-# the users commands. All functions above will be called directly or indirectly through this function.
+
+
 def main():
-    ask_seed = True
-    while ask_seed:
-        global seed
-        global file_name
-        seed = log_in()
-        file_name = create_file_name()
+    global connected
+    global chargerDeviceID
+    global chargerIotaAddress
+    global seed
+    global file_name
+    seed = log_in()
+    print(seed)
+    file_name = create_file_name()
+    print(file_name)
         
-        global iota_node
-        global raw_account_data
-        global settings
-        global address_data
-        global fal_balance
-        global transfers_data
-        global account_history_executing
-        global bundleList
-        
-        bundleList =[]
+    global iota_node
+    global raw_account_data
+    global settings
+    global address_data
+    global fal_balance
+    global transfers_data
+    global account_history_executing
+    global bundleList
 
-        #check if local file created for account information
-        file_path = os.path.abspath(file_name)
-        first_time_login = os.path.isfile(file_path)
-        
-        raw_account_data = read_account_data()
-        settings = raw_account_data['account_data'][0]['settings']
-        address_data = raw_account_data['account_data'][0]['address_data']
-        fal_balance = raw_account_data['account_data'][0]['fal_balance']
-        transfers_data = raw_account_data['account_data'][0]['transfers_data']      
-        
-        iota_node = settings[0]['host']
+    bundleList =[]
 
-        
-        if not first_time_login:
-            standard_account_info()
+    #check if local file created for account information
+    file_path = os.path.abspath(file_name)
+    print("file_path: " + file_path)
+    first_time_login = os.path.isfile(file_path)
+    print("first_time_login: " + str(first_time_login))
+    
+    raw_account_data = read_account_data()
+    settings = raw_account_data['account_data'][0]['settings']
+    address_data = raw_account_data['account_data'][0]['address_data']
+    fal_balance = raw_account_data['account_data'][0]['fal_balance']
+    transfers_data = raw_account_data['account_data'][0]['transfers_data'] 
+    
+    iota_node = settings[0]['host']
+    print("iota_node: " + str(iota_node))
 
-        logged_in = True
-        account_history_executing = False
-        
-        while logged_in:
-            print(bundleList)
-            call_history()
-            time.sleep(20)
-            
+    ## prepare_transferes()
+    get_deposit_address()
+    
+    connected = True
+    while True:
+        if connected:
+        	# Send Car Device ID to Charger
+        	# Get Charger Device ID and Iota address
+        	# Check existence of charger device by charger device id
+        	# check current balance and based on its battery capability to calculate the payment
+        	# pay 
+        	# get battery
+
+
+            pass;
+        else:
+            pass;
+
 main()
-
