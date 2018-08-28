@@ -8,6 +8,26 @@
 <script>
 import HelloWorld from './components/HelloWorld.vue'
 
+import io from 'socket.io-client'
+const socket = io('http://127.0.0.1:7001')
+
+
+socket.on('connect', () => {
+  /* eslint-disable */
+  console.log('connect!', socket.id)
+  socket.emit('PING')
+})
+
+socket.on('PONG', msg => {
+  /* eslint-disable */
+  console.log('PONG msg', msg)
+})
+
+/* eslint-disable */
+socket.on('transaction', msg => console.log('transaction', msg))
+
+window.socket = socket
+
 export default {
   name: 'app',
   components: {
