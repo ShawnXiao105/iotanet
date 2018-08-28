@@ -9,6 +9,14 @@ module.exports = appInfo => {
   // add your config here
   config.middleware = []
 
+  config.security = {
+    csrf: {
+      ignore: ctx => true
+    },
+    ignore: '/api/',
+    domainWhiteList: []
+  }
+
   // socket.io
   config.io = {
     init: { }, // passed to engine.io
