@@ -8,10 +8,9 @@ class TransactionController extends Controller {
    * and deliver the log to transaction logger web page via socket
    */
   async create () {
-    const transactionData = { datetime: new Date() } // this.ctx.request.body
-
+    console.log(this.ctx.request.body)
     // broadcast the transaction data to all connected socket clients
-    await this.app.io.emit('transaction', transactionData)
+    await this.app.io.emit('transaction', this.ctx.request.body)
 
     // TODO emit('transaction-<type>')
 
