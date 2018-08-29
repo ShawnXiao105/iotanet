@@ -1,15 +1,17 @@
 <template>
   <div class="list">
-    <div class="item" v-for="item in listData" :key="item.token">
-      <a-row class="item__title" type="flex" justify="space-between" align="middle">
-        <h4 class="item__time">{{item.createdAt | timeFormater}}</h4>
-        <a-tag color="pink">1M</a-tag>
-      </a-row>
-      <a-row>
-        <div class="item__address"><a-icon type="arrow-right" /> {{item.address}}</div>
-        <div class="item__token">{{item.token}}</div>
-      </a-row>
-    </div>
+    <transition-group name="list" tag="div">
+      <div class="item" v-for="item in listData" :key="item.token">
+        <a-row class="item__title" type="flex" justify="space-between" align="middle">
+          <h4 class="item__time">{{item.createdAt | timeFormater}}</h4>
+          <a-tag color="pink">1M</a-tag>
+        </a-row>
+        <a-row>
+          <div class="item__address"><a-icon type="arrow-right" /> {{item.address}}</div>
+          <div class="item__token">{{item.token}}</div>
+        </a-row>
+      </div>
+    </transition-group>
   </div>
 </template>
 
@@ -57,5 +59,13 @@ export default {
   line-height: 17px;
   color: #00a0ff;
   overflow-wrap: break-word;
+}
+
+.list-enter-active, .list-leave-active {
+  transition: all .3s;
+}
+.list-enter, .list-leave-to /* .list-leave-active below version 2.1.8 */ {
+  opacity: 0;
+  transform: translateY(20px);
 }
 </style>
