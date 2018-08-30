@@ -1,5 +1,14 @@
 'use strict'
 const Controller = require('egg').Controller
+const randomString = require('randomstring')
+
+const generateData = () => {
+  return {
+    token: randomString.generate(90),
+    address: randomString.generate(81),
+    createdAt: new Date()
+  }
+}
 
 class TransactionController extends Controller {
   /**
@@ -10,7 +19,7 @@ class TransactionController extends Controller {
   async create () {
     console.log(this.ctx.request.body)
     // broadcast the transaction data to all connected socket clients
-    await this.app.io.emit('transaction', this.ctx.request.body)
+    await this.app.io.emit('transaction', generateData())
 
     // TODO emit('transaction-<type>')
 

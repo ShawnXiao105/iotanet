@@ -5,7 +5,7 @@ import App from './App.vue'
 import 'ant-design-vue/dist/antd.css'
 
 Vue.use(Antd)
-Vue.use(VueSocketIO, 'http://localhost:7001')
+Vue.use(VueSocketIO, 'http://jackyang.me:7001')
 Vue.config.productionTip = false
 
 new Vue({

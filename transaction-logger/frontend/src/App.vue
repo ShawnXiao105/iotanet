@@ -29,13 +29,6 @@ import randomString from 'randomstring'
 import TransactionList from './components/TransactionList.vue'
 
 const MAX_LENGTH = 100
-const generateData = () => {
-  return {
-    token: randomString.generate(90),
-    address: randomString.generate(81),
-    createdAt: new Date()
-  }
-}
 
 export default {
   name: 'app',
@@ -54,23 +47,13 @@ export default {
       transactionList: []
     }
   },
-
-  mounted () {
-    const repeat = () => {
-      this.push(generateData())
-      this.renderKey = Date.now()
-      setTimeout(repeat, Math.random() * 1000)
-    }
-
-    repeat()
-  },
   
   sockets: {
     connect () {
-      // console.log('connected')
+      console.log('connected')
     },
     transaction (trx) {
-      // console.log('trx', trx)
+      console.log('trx', trx)
       this.push(trx)
     }
   },
