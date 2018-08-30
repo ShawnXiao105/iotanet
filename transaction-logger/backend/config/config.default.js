@@ -1,4 +1,5 @@
 'use strict'
+const path = require('path')
 
 module.exports = appInfo => {
   const config = exports = {}
@@ -8,6 +9,11 @@ module.exports = appInfo => {
 
   // add your config here
   config.middleware = []
+
+  config.public = {
+    prefix: '/public/',
+    dir: path.join(appInfo.baseDir, 'app/public')
+  }
 
   config.security = {
     csrf: {
