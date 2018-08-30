@@ -55,6 +55,7 @@ export default {
     transaction (trx) {
       console.log('trx', trx)
       this.push(trx)
+      this.renderKey = Date.now()
     }
   },
 
