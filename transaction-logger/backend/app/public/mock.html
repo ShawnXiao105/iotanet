@@ -25,7 +25,15 @@
     <!-- built files will be auto injected -->
     <script>
     function send () {
-      fetch('/api/transaction', { method: 'post' })
+      fetch('/api/transaction', {
+        method: 'post',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          deviceType: 'mock',
+          deviceId: 'mockId',
+          messageType: 'mock'
+        })
+      })
     }
     </script>
   </body>
