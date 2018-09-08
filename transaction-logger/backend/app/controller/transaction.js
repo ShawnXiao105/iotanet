@@ -27,6 +27,7 @@ class TransactionController extends Controller {
     const total = await query.count()
     query.limit(pageSize)
     query.skip(pageSize * (page - 1))
+    query.descending('createdAt')
 
     const list = await query.find()
     
