@@ -22,7 +22,7 @@
         <span>{{value | timeFormater}}</span>
       </template>
       <template slot="operation" slot-scope="text, record">
-        <raw-message-modal :rawMessage="JSON.stringify(record.raw)" :title="record.objectId" />
+        <raw-message-modal :rawMessage="JSON.stringify(record.raw, null, 2)" :title="record.objectId" />
       </template>
     </a-table>
   </div>
