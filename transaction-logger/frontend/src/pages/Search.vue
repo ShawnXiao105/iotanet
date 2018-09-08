@@ -18,17 +18,27 @@
       :loading="loading"
       @change="handleTableChange"
     >
-      <template slot="name" slot-scope="name">
-        {{name.first}} {{name.last}}
+      <template slot="createdAt" slot-scope="value">
+        <span>{{value | timeFormater}}</span>
+      </template>
+      <template slot="operation" slot-scope="text, record">
+        <raw-message-modal :rawMessage="JSON.stringify(record.raw)" :title="record.objectId" />
       </template>
     </a-table>
   </div>
 </template>
 
 <script>
+import day from 'dayjs'
 import { list } from '../apis/transaction'
+import RawMessageModal from '../modals/RawMessage'
+const PAGE_SIZE = 20
 
 export default {
+  components: {
+    RawMessageModal
+  },
+
   data () {
     return {
       columns: [{
@@ -42,10 +52,15 @@ export default {
         dataIndex: 'deviceType'
       }, {
         title: 'Created At',
-        dataIndex: 'createdAt'
+        dataIndex: 'createdAt',
+        scopedSlots: { customRender: 'createdAt' }
+      }, {
+        title: 'Operation',
+        dataIndex: '',
+        scopedSlots: { customRender: 'operation' }
       }],
       data: [],
-      pagination: { page: 1 },
+      pagination: { current: 1, pageSize: PAGE_SIZE, total: 0 },
       loading: false,
 
       conditions: {
@@ -60,33 +75,40 @@ export default {
   },
 
   methods: {
-    fetch (conditions, pagination) {
+    fetch (conditions, { current, pageSize = PAGE_SIZE }) {
       this.loading = true
-      list(conditions, pagination).then(response => {
+      list(conditions, { page: current, pageSize }).then(response => {
         const { data, status } = response.data
         const { list, meta } = data
         this.data = list
         this.pagination = {
-          size: `${meta.pageSize}`,
+          current: meta.page * 1,
+          pageSize: meta.pageSize * 1,
           total: meta.total
         }
         this.loading = false
       })
     },
 
-    handleTableChange (pagination) {
-      this.fetch(this.conditions, pagination)
+    handleTableChange ({ current }) {
+      this.fetch(this.conditions, { current })
     },
 
     handleDeviceTypeChange (type) {
       this.fetch({
         ...this.condition,
         deviceType: type
-      }, { page: 1 })
+      }, { current: 1 })
     },
 
     handleSearch () {
       this.fetch(this.conditions, this.pagination)
+    }
+  },
+
+  filters: {
+    timeFormater (value) {
+      return day(value).format('MMM DD, YYYY HH:mm:ss')
     }
   }
 }

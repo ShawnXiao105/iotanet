@@ -31,7 +31,8 @@ export default {
     timeFormater (value) {
       return day(value).format('MMM DD, YYYY HH:mm:ss')
     },
-    raw ({ deviceId, deviceType, createdAt, updatedAt, messageType, ...rest }) {
+    raw (item) {
+      const { deviceId, deviceType, createdAt, updatedAt, messageType, ...rest } = item.raw
       return JSON.stringify(rest)
     }
   }
