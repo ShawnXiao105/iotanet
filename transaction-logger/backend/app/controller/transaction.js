@@ -77,6 +77,7 @@ class TransactionController extends Controller {
     const trx = new Transaction()
     let error
 
+    trx.set('raw', body)
     ;['deviceId', 'deviceType', 'messageType'].forEach(field => {
       if (body[field]) {
         trx.set(field, body[field])
