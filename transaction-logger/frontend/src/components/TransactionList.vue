@@ -1,14 +1,14 @@
 <template>
   <div class="list">
     <transition-group name="list" tag="div">
-      <div class="item" v-for="item in listData" :key="item.token">
+      <div class="item" v-for="item in listData" :key="item.objectId">
         <a-row class="item__title" type="flex" justify="space-between" align="middle">
           <h4 class="item__time">{{item.createdAt | timeFormater}}</h4>
-          <a-tag color="pink">1M</a-tag>
+          <a-tag color="green">{{item.messageType}}</a-tag>
         </a-row>
         <a-row>
-          <div class="item__address"><a-icon type="arrow-right" /> {{item.address}}</div>
-          <div class="item__token">{{item.token}}</div>
+          <div class="item__address">[{{item.deviceType}}#{{item.deviceId}}]<a-icon type="arrow-right" /></div>
+          <div class="item__token">{{item | raw}}</div>
         </a-row>
       </div>
     </transition-group>
@@ -30,6 +30,9 @@ export default {
   filters: {
     timeFormater (value) {
       return day(value).format('MMM DD, YYYY HH:mm:ss')
+    },
+    raw ({ deviceId, deviceType, createdAt, updatedAt, messageType, ...rest }) {
+      return JSON.stringify(rest)
     }
   }
 }
