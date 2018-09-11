@@ -1,3 +1,7 @@
+#!/usr/bin/python
+# -*- coding: UTF-8 -*-
+
+import os
 import sys
 import json
 import urllib
@@ -9,88 +13,90 @@ class OneNetAPI():
     config = None
 
     def __init__(self):
-        self.config = Config()
+        conf_filename = "OneNetAPI.cfg"
+        self.config = Config(conf_filename)
 
     def http_request(self, url, parameter, data, request_method):
-        #proxy_url = dict([list(self.config.getConfigValues('PROXY')[0])])
-        #proxy = urllib2.ProxyHandler(proxy_url)
-        #opener = urllib2.build_opener(proxy)
-        #urllib2.install_opener(opener)
+        #******************** proxy used only ********************
+        """
+        proxy_url = dict([list(self.config.getConfigValues('PROXY')[0])])
+        proxy = urllib2.ProxyHandler(proxy_url)
+        opener = urllib2.build_opener(proxy)
+        urllib2.install_opener(opener)
+        """
 
         request = urllib2.Request(url + parameter, data)  
-        print url + parameter
         request.add_header('api-key', self.config.getConfigValues('KEY', key = 'api-key'))  
         request.get_method = lambda:request_method  
         request = urllib2.urlopen(request) 
 
         return request.read()
         
-    def register_device(self):
-        values = {}
-        values['sn'] = '456666'
-        values['title'] = '454545454'
-        data = json.dumps(values)
+    def register_device(self, device_info):
+        #values = {}
+        #values['sn'] = '456666'
+        #values['title'] = '454545454'
+        data = json.dumps(device_info)
         register_url = self.config.getConfigValues('URL', key = 'register_url')
         register_code = self.config.getConfigValues('KEY', key = 'register_code')
         parameter = {}
         parameter['register_code'] = register_code
         
-        result = json.loads(self.http_request(register_url, urllib.urlencode(parameter), data))
+        result = json.loads(self.http_request(register_url, urllib.urlencode(parameter), data, 'POST'))
 
         if result['errno'] == 0:
-            print("Device {0} registered successfully.".format(values['title']))
+            print("Device {0} registered successfully.".format(result['data']['device_id']))
             
-            return result['device_id']
+            #return result['device_id']
+            return result
+
         else:
-            print("Device {0} registered failed.\nError: {1}".format(values['title'], result['error']))
+            print("Device {0} registered failed.\nError: {1}".format(result['data']['device_id'], result['error']))
         
         return False
 
-    def add_device(self):
-        values = {}
-        values['title'] = '456666'
-        values['desc'] = '454545454'
-        values['protocol'] = 'HTTP'
-        values['auth_info'] = '112'
-        data = json.dumps(values)
+    def add_device(self, device_info):
+        #values = {}
+        #values['title'] = '456666'
+        #values['desc'] = '454545454'
+        #values['protocol'] = 'HTTP'
+        #values['auth_info'] = '112'
+        data = json.dumps(device_info)
         add_url = self.config.getConfigValues('URL', key = 'add_url')
-        #register_code = self.config.getConfigValues('KEY', key = 'register_code')
         parameter = {}
-        #parameter['register_code'] = register_code
         
-        result = json.loads(self.http_request(add_url, urllib.urlencode(parameter), data))
+        result = json.loads(self.http_request(add_url, urllib.urlencode(parameter), data, 'POST'))
 
         if result['errno'] == 0:
-            print "OK"
-            return result['data']['device_id']
-        
+            #return result['data']['device_id']
+            print("Device {0} added successfully.".format(result['data']['device_id']))
+            return result
+        else:
+            print("Device {0} registered failed.\nError: {1}".format(result['data']['device_id'], result['error']))
+
         return False
     
-    def search_device(self):
-        values = {}
-        #values['title'] = '456666'
-        data = json.dumps(values)
+    def search_device(self, device_id):
         search_url = self.config.getConfigValues('URL', key = 'search_url')
-  
-        parameter = {}
-        parameter[''] = '39088078'
-        #parameter['title'] = 'myedpdevice'
+        parameter = device_id
+        result = json.loads(self.http_request(search_url, parameter, None, 'GET'))
 
-        result = json.loads(self.http_request(search_url, '39088078', data, 'GET'))
+        if result['errno'] == 0:
+            return result
 
-        print result
-
+        return False
+    
     def write_file(self, name, content):
         with open(name, 'w') as file:
             file.write(content)
+    
+    def check_file_is_exist(self, name):
+        is_exist = os.path.exists(name)
+
+        return is_exist
 
 
 
-api = OneNetAPI()
-#api.register_device()
-#device_id = api.add_device()
 
-#if device_id:
-#   api.write_file('DEVICE_ID', device_id)
 
-api.search_device()
+
