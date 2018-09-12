@@ -14,12 +14,6 @@ python charger_register.py
 
 ## chargeBattery
 
-### Raspberry Car
 ```
-python car_chargeBattery.py
-```
-
-### Raspberry Charger
-```
-python charger_chargeBattery.py
+python chargeBattery.py
 ```

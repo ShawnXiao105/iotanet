@@ -7,7 +7,7 @@ def main():
     #conf_filename = "OneNetAPI.cfg"
 
     device_info = {}
-    device_info['title'] = 'raspberry_car'
+    device_info['title'] = 'car'
     device_info['desc'] = 'The Raspberry Car'
     device_info['protocol'] = 'HTTP'
     device_info['auth_info'] = '192168120'

@@ -2,15 +2,18 @@
 # -*- coding: UTF-8 -*-
 
 from Car import Car
+from OneNetAPI import OneNetAPI
 
 def main():
     car = Car()
+    car_device_id = car.read_file('CAR_DEVICE_ID')
+    
 
     #*********** send car first connection event ***********
     message = {}
     message['messageType'] = 'connect'
     message['deviceType'] = 'car'
-    message['deviceId'] = '123'
+    message['deviceId'] = car_device_id
     message['connectedTo'] = '456'
     message['connectionStatus'] = True
 
@@ -31,7 +34,7 @@ def main():
     message = {}
     message['messageType'] = 'balance'
     message['deviceType'] = 'car'
-    message['deviceId'] = '123'
+    message['deviceId'] = car_device_id
     message['balance_status'] = True
 
     result = car.sendMessageToTransactionLogger(message)
@@ -41,7 +44,7 @@ def main():
     message = {}
     message['messageType'] = 'transaction'
     message['deviceType'] = 'car'
-    message['deviceId'] = '123'
+    message['deviceId'] = car_device_id
     message['transaction_status'] = 'done'
 
     result = car.sendMessageToTransactionLogger(message)
@@ -51,7 +54,7 @@ def main():
     message = {}
     message['messageType'] = 'charging'
     message['deviceType'] = 'car'
-    message['deviceId'] = '123'
+    message['deviceId'] = car_device_id
     message['charging_status'] = True
 
     result = car.sendMessageToTransactionLogger(message)

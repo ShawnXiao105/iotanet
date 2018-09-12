@@ -76,10 +76,12 @@ class OneNetAPI():
 
         return False
     
-    def search_device(self, device_id):
+    def search_device(self, auth_info):
         search_url = self.config.getConfigValues('URL', key = 'search_url')
-        parameter = device_id
-        result = json.loads(self.http_request(search_url, parameter, None, 'GET'))
+        parameter = {}
+        parameter['auth_info'] = auth_info
+      
+        result = json.loads(self.http_request(search_url, urllib.urlencode(parameter), None, 'GET'))
 
         if result['errno'] == 0:
             return result
@@ -94,9 +96,4 @@ class OneNetAPI():
         is_exist = os.path.exists(name)
 
         return is_exist
-
-
-
-
-
 
